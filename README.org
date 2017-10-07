@@ -1,0 +1,6 @@
+** Pygments lexer for org-mode
+I want to syntax highlight some org-mode code, but I couldn't find any lexers
+for Pygments, so I'll try to write one.
+
+It'll be based on https://github.com/jhermann/pygments-markdown-lexer, as I suspect
+it is very similar.
