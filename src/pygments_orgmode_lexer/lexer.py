@@ -26,6 +26,7 @@ from __future__ import absolute_import, unicode_literals, print_function
 import re
 
 from pygments.lexer import RegexLexer, include, bygroups, using, this, do_insertions, default, words
+from pygments.lexers import find_lexer_class_by_name
 from pygments.token import *  # pylint: disable=wildcard-import, unused-wildcard-import
 
 from ._compat import encode_filename as state
@@ -77,6 +78,25 @@ class OrgMode(object):
         yield match.start(3), heading_token, name
         yield match.start(4), Text, end
 
+    def source_block(lexer, match):
+        src_line_1 = match.group(1)
+        code_type = match.group(2)
+        src_line_2 = match.group(3)
+        block = match.group(4)
+        end_line = match.group(5)
+
+        yield match.start(), OrgMode.Block, src_line_1 + code_type + src_line_2
+        try:
+            lexer_class = find_lexer_class_by_name(code_type)
+            lexer = lexer_class()
+            for token in lexer.get_tokens_unprocessed(block):
+                yield token
+
+        except ClassNotFound as e:
+            yield match.start(4), OrgMode.Block, block
+
+        yield match.start(5), OrgMode.Block, end_line
+
 
 class OrgModeLexer(RegexLexer):
     """
@@ -88,7 +108,7 @@ class OrgModeLexer(RegexLexer):
     aliases = ['org', 'orgmode']
     filenames = ['*.org', '*.org_archive']
     mimetypes = ["text/x-org-mode"]
-    flags = re.MULTILINE
+    flags = re.MULTILINE | re.DOTALL
 
     # from docutils.parsers.rst.states
     closers = u'\'")]}>\u2019\u201d\xbb!?'
@@ -100,21 +120,20 @@ class OrgModeLexer(RegexLexer):
     tokens = {
         state('root'): [
             # Headings
-            (r'^([*]{1,} *)(TODO|DONE|WAIT|CANCELLED)?(.+?)(\n)',
+            (r'^(,?[*]{1,} *)(TODO|DONE|WAIT|CANCELLED)?(.+?)(\n)',
              OrgMode.heading),
 
-            (r'^ *#\+BEGIN_SRC.*?\n',
-             OrgMode.Block,
-             state('codeblock')),
-            (r'^ *#\+BEGIN_(QUOTE|EXAMPLE|VERSE).*?\n',
+            (r'^( *#\+BEGIN_SRC +)([a-z\-]+)(.*?\n)(.*?\n)(#\+END_SRC.*?\n)',
+             OrgMode.source_block),
+            (r'^ *#\+BEGIN_(QUOTE|EXAMPLE|VERSE|SRC).*?\n',
              OrgMode.Block,
              state('block')),
 
             # metadata
-            (r'^( *#\+[a-zA-Z0-9].*)(\n)',
+            (r'^( *#\+[a-zA-Z0-9].*?)(\n)',
              bygroups(OrgMode.MetaData, Text)),
             # drawers and property names: :FOOBAR:
-            (r'^( *:[a-zA-Z0-9].*:.*)(\n)',
+            (r'^( *:[a-zA-Z0-9].*?:.*?)(\n)',
              bygroups(OrgMode.Drawer, Text)),
             # closed, scheduled, deadline lines
             (r'^ *(CLOSED|SCHEDULED|DEADLINE)',
@@ -157,12 +176,6 @@ class OrgModeLexer(RegexLexer):
         state('block'): [
             (r'^ *#\+END_(QUOTE|EXAMPLE|VERSE|SRC).*?\n',
              OrgMode.Block, state('#pop')),
-            (r'\n', OrgMode.Block), # without this the state is lost
-            (r'[a-zA-Z0-9 ]+', OrgMode.Block),  # optimize normal words a little
-            (r'.', OrgMode.Block),  # default fallback
-        ],
-        state('codeblock'): [
-            (r'^ *#\+END_SRC.*?\n', OrgMode.Block, state('#pop')),
             (r'\n', OrgMode.Block), # without this the state is lost
             (r'[a-zA-Z0-9 ]+', OrgMode.Block),  # optimize normal words a little
             (r'.', OrgMode.Block),  # default fallback
