@@ -59,7 +59,8 @@ class OrgMode(object):
             OrgMode.Heading4,
             OrgMode.HeadingRest,
         ]
-        heading_token = levels[min(len(level) - 1, len(levels) - 1)]
+        level_index = level.count("*") - 1
+        heading_token = levels[min(level_index, len(levels) - 1)]
         if todo:
             todo_tokens = {
                 'TODO': OrgMode.TodoActive,
@@ -154,7 +155,7 @@ class OrgModeLexer(RegexLexer):
             (r'.', Text),  # default fallback
         ],
         state('block'): [
-            (r'^ *#\+END_(QUOTE|EXAMPLE|VERSE).*?\n',
+            (r'^ *#\+END_(QUOTE|EXAMPLE|VERSE|SRC).*?\n',
              OrgMode.Block, state('#pop')),
             (r'\n', OrgMode.Block), # without this the state is lost
             (r'[a-zA-Z0-9 ]+', OrgMode.Block),  # optimize normal words a little
