@@ -26,8 +26,9 @@ from __future__ import absolute_import, unicode_literals, print_function
 import re
 
 from pygments.lexer import RegexLexer, include, bygroups, using, this, do_insertions, default, words
-from pygments.lexers import find_lexer_class_by_name
+from pygments.lexers import get_lexer_by_name
 from pygments.token import *  # pylint: disable=wildcard-import, unused-wildcard-import
+from pygments.util import ClassNotFound
 
 from ._compat import encode_filename as state
 
@@ -46,7 +47,7 @@ class OrgMode(object):
     TodoActive = Keyword.Declaration
     TodoPending = Keyword.Pseudo
     TodoTerminal = Keyword.Reserved
-    Timestamp = Name.Function.Magic
+    Timestamp = Name.Variable.Class
 
     def heading(lexer, match):
         level = match.group(1)
@@ -87,8 +88,7 @@ class OrgMode(object):
 
         yield match.start(), OrgMode.Block, src_line_1 + code_type + src_line_2
         try:
-            lexer_class = find_lexer_class_by_name(code_type)
-            lexer = lexer_class()
+            lexer = get_lexer_by_name(code_type)
             for token in lexer.get_tokens_unprocessed(block):
                 yield token
 
