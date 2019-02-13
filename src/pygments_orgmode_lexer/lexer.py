@@ -176,7 +176,7 @@ class OrgModeLexer(RegexLexer):
         state('block'): [
             (r'^ *#\+END_(QUOTE|EXAMPLE|VERSE|SRC).*?\n',
              OrgMode.Block, state('#pop')),
-            (r'\n', OrgMode.Block), # without this the state is lost
+            (r'\n', OrgMode.Block),  # without this the state is lost
             (r'[a-zA-Z0-9 ]+', OrgMode.Block),  # optimize normal words a little
             (r'.', OrgMode.Block),  # default fallback
         ],
