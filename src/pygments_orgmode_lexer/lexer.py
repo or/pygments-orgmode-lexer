@@ -25,9 +25,9 @@ from __future__ import absolute_import, unicode_literals, print_function
 
 import re
 
-from pygments.lexer import RegexLexer, include, bygroups, using, this, do_insertions, default, words
+from pygments.lexer import RegexLexer, include, bygroups
 from pygments.lexers import get_lexer_by_name
-from pygments.token import *  # pylint: disable=wildcard-import, unused-wildcard-import
+from pygments.token import Comment, Generic, Keyword, Literal, Name, String, Text
 from pygments.util import ClassNotFound
 
 from ._compat import encode_filename as state
