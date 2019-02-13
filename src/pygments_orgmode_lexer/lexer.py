@@ -108,7 +108,7 @@ class OrgModeLexer(RegexLexer):
     aliases = ['org', 'orgmode']
     filenames = ['*.org', '*.org_archive']
     mimetypes = ["text/x-org-mode"]
-    flags = re.MULTILINE | re.DOTALL
+    flags = re.MULTILINE | re.DOTALL | re.IGNORECASE
 
     # from docutils.parsers.rst.states
     closers = u'\'")]}>\u2019\u201d\xbb!?'
