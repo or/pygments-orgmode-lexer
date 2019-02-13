@@ -32,6 +32,9 @@ from pygments.util import ClassNotFound
 
 from ._compat import encode_filename as state
 
+LEXER_ALIASES = {
+    "conf": "ini",
+}
 
 class OrgMode(object):
     """Symbolic names for org-mode tokens."""
@@ -87,8 +90,9 @@ class OrgMode(object):
         end_line = match.group(5)
 
         yield match.start(), OrgMode.Block, src_line_1 + code_type + src_line_2
+        lexer_alias = LEXER_ALIASES.get(code_type, code_type)
         try:
-            lexer = get_lexer_by_name(code_type)
+            lexer = get_lexer_by_name(lexer_alias)
             for token in lexer.get_tokens_unprocessed(block):
                 yield token
 
